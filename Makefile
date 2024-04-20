@@ -5,14 +5,18 @@ CFLAGS=-I./sfs_code
 LDFLAGS=
 SOURCES_C=$(wildcard sfs_code/*.c)
 OBJECTS_C=$(SOURCES_C:.c=.o)
-SOURCES_CPP=dils.cpp
+SOURCES_CPP=dils.cpp sfs_code/fs.cpp dicpo.cpp
 OBJECTS_CPP=$(SOURCES_CPP:.cpp=.o)
-EXECUTABLE=dils
+EXECUTABLE_DILS=dils
+EXECUTABLE_DICPO=dicpo
 
-all: $(SOURCES_C) $(SOURCES_CPP) $(EXECUTABLE)
+all: $(SOURCES_C) $(SOURCES_CPP) $(EXECUTABLE_DILS) $(EXECUTABLE_DICPO) clean
 
-$(EXECUTABLE): $(OBJECTS_C) $(OBJECTS_CPP)
-	$(CXX) $(LDFLAGS) $(OBJECTS_C) $(OBJECTS_CPP) -o $@
+$(EXECUTABLE_DILS): $(OBJECTS_C) dils.o sfs_code/fs.o
+	$(CXX) $(LDFLAGS) $(OBJECTS_C) dils.o sfs_code/fs.o -o $@
+
+$(EXECUTABLE_DICPO): $(OBJECTS_C) dicpo.o sfs_code/fs.o 
+	$(CXX) $(LDFLAGS) $(OBJECTS_C) dicpo.o sfs_code/fs.o -o $@
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -20,7 +24,8 @@ $(EXECUTABLE): $(OBJECTS_C) $(OBJECTS_CPP)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-fullclean:
-	rm -f $(EXECUTABLE) $(OBJECTS_C) $(OBJECTS_CPP)
+wipe:
+	rm -f $(EXECUTABLE_DILS) $(EXECUTABLE_DICPO) $(OBJECTS_C) $(OBJECTS_CPP)
+
 clean:
 	rm -f $(OBJECTS_C) $(OBJECTS_CPP)

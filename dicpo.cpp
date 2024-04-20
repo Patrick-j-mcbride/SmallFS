@@ -1,6 +1,10 @@
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <fs.hpp>
 
 #ifdef __cplusplus
 extern "C"
@@ -11,41 +15,33 @@ extern "C"
 #include <sfs_superblock.h>
 #include <sfs_inode.h>
 #include <sfs_dir.h>
-#include <helpers.h>
 
 #ifdef __cplusplus
 }
 #endif
 
+using namespace std;
+
 void copy_file_out(char *diskname, char *filename)
 {
-    char raw_superblock[128];
-    sfs_superblock *super = (sfs_superblock *)raw_superblock;
-
-    driver_attach_disk_image(diskname, 128);
-    get_superblock(super);
-    // get the first inode
-    sfs_inode *inode = (sfs_inode *)malloc(sizeof(sfs_inode));
-    driver_read(inode, super->inodes);
-    printf("Root inode found at block %d\n", super->inodes);
-    // output the type for the inode
-    if (inode->type == FT_DIR)
+    Disk disk = Disk(diskname, 128);
+    disk.get_files_in_root();
+    if (disk.file_exists(filename))
     {
-        printf("Root inode is a directory\n");
+        disk.copy_file_out(filename);
     }
     else
     {
-        printf("Root inode is a file\n");
+        cout << "File does not exist" << endl;
+        exit(1);
     }
-
-    driver_detach_disk_image();
 }
 
 int main(int argc, char **argv)
 {
     if (argc < 3)
     { // No arguments
-        printf("Usage: <diskname> <filename>");
+        cout << "Usage: <diskname> <filename>" << endl;
         return 1;
     }
     else if (argc == 3)
@@ -57,7 +53,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        printf("Usage: <diskname> <filename>");
+        cout << "Usage: <diskname> <filename>" << endl;
         return 1;
     }
 }
