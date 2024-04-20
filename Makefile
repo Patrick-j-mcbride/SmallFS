@@ -20,5 +20,7 @@ $(EXECUTABLE): $(OBJECTS_C) $(OBJECTS_CPP)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-clean:
+fullclean:
 	rm -f $(EXECUTABLE) $(OBJECTS_C) $(OBJECTS_CPP)
+clean:
+	rm -f $(OBJECTS_C) $(OBJECTS_CPP)
