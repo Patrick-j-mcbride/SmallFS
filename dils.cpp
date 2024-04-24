@@ -26,7 +26,15 @@ void ls(char *diskname, bool l)
 {
     Disk disk = Disk(diskname, 128);
     disk.get_files_in_root();
-    disk.print_filenames();
+    if (!l)
+    {
+        disk.print_filenames();
+        return;
+    }
+    else if (l)
+    {
+        disk.print_file_info();
+    }
 }
 
 int main(int argc, char **argv)

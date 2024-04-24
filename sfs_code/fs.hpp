@@ -35,6 +35,21 @@ class FileData
 public:
     string name;
     uint32_t inode;
+
+    uint32_t owner;
+    uint32_t group;
+    uint32_t ctime;
+    uint32_t mtime;
+    uint32_t atime;
+    uint16_t perm;
+    uint8_t type;
+    uint8_t refcount;
+    uint64_t size;
+    uint32_t direct[NUM_DIRECT];
+    uint32_t indirect;
+    uint32_t dindirect;
+    uint32_t tindirect;
+    void print_ls_al_info();
 };
 
 class Disk
@@ -53,6 +68,8 @@ public:
     bool file_exists(char *filename);
     void copy_file_out(char *filename);
     void get_file_block(sfs_inode *inode, int block_num, char *block);
+    void print_superblock();
+    void print_file_info();
 
     vector<FileData> filedata;
     char *image_file_name;
