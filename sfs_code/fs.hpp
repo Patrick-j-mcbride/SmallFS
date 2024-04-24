@@ -50,6 +50,7 @@ public:
     uint32_t dindirect;
     uint32_t tindirect;
     void print_ls_al_info();
+    string date_from_time(uint32_t time);
 };
 
 class Disk

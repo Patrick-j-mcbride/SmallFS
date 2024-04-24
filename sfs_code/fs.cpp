@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <ctime>
+#include <iomanip>
 
 #ifdef __cplusplus
 extern "C"
@@ -298,14 +300,6 @@ void FileData::print_ls_al_info()
         perm_str += "?";
         break;
     }
-    // perm holds the permissions values for the file
-    // Other is the last 3 bits of the permissions
-    // Group is the next 3 bits of the permissions
-    // Owner is the next 3 bits of the permissions
-    // The remaining leftmost bits are unused
-    // Using the bitwise AND operator to get each bit from left to right
-    // and adding the corresponding character to the permissions string
-    // Must convert perm to an int to use bitwise AND
 
     perm_str += (perm & 0x100) ? "r" : "-";
     perm_str += (perm & 0x80) ? "w" : "-";
@@ -316,11 +310,39 @@ void FileData::print_ls_al_info()
     perm_str += (perm & 0x4) ? "r" : "-";
     perm_str += (perm & 0x2) ? "w" : "-";
     perm_str += (perm & 0x1) ? "x" : "-";
+
     // add a space after the permissions string
     perm_str += " ";
     output_str += perm_str;
-    // add the number of hard links to the file
-    output_str += to_string(refcount) + " ";
+    cout << perm_str;
 
-    cout << output_str << name << size << endl;
+    cout << right << setw(3) << to_string(refcount) << " ";
+
+    cout << right << setw(4) << to_string(owner) << " ";
+
+    cout << right << setw(4) << to_string(group) << " ";
+
+    cout << right << setw(8) << to_string(size) << " ";
+
+    cout << date_from_time(ctime) << " ";
+
+    cout << name << endl;
+}
+
+string FileData::date_from_time(uint32_t time)
+{
+    // Convert uint32_t time to time_t
+    time_t raw_time = time;
+
+    // Localize the time
+    struct tm *timeinfo = gmtime(&raw_time);
+
+    // Buffer to store the formatted date and time
+    char buffer[80];
+
+    // Format the date and time: "Mon 2 Jan 2006 15:04"
+    strftime(buffer, sizeof(buffer), "%b %d %Y %H:%M", timeinfo);
+
+    // Return the formatted string
+    return string(buffer);
 }
