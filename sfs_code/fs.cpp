@@ -17,6 +17,7 @@ extern "C"
 #include <sfs_superblock.h>
 #include <sfs_inode.h>
 #include <sfs_dir.h>
+#include <bitmap.h>
 
 #ifdef __cplusplus
 }
@@ -69,6 +70,7 @@ void Disk::get_super()
         if (super->fsmagic == VMLARIX_SFS_MAGIC && !strcmp(super->fstypestr, VMLARIX_SFS_TYPESTR))
         {
             found = 1;
+            superblock_num = block_num;
         }
         else
         {
@@ -173,6 +175,46 @@ void Disk::copy_file_out(char *filename)
     }
 }
 
+void Disk::copy_file_in(char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        cout << filename << " does not exist" << endl;
+        exit(1);
+    }
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    int blocks = size / block_size;
+    if (size % block_size != 0)
+    {
+        blocks++;
+    }
+    fseek(file, 0, SEEK_SET);
+    char *data = (char *)malloc(size);
+    fread(data, size, 1, file);
+    fclose(file);
+
+    // Find a free inode
+    int inode_num = find_free_inode();
+    cout << "Inode number: " << inode_num << endl;
+    if (inode_num == -1)
+    {
+        cout << "No free inodes on the disk image" << endl;
+        exit(1);
+    }
+    vector<int> free_blocks = find_free_blocks(blocks);
+    cout << "Free blocks: " << free_blocks.size() << endl;
+    if (free_blocks.size() < blocks)
+    {
+        cout << "Not enough free blocks on the disk image" << endl;
+        exit(1);
+    }
+
+    cout << "Size of file: " << size << endl;
+    cout << "Number of blocks: " << blocks << endl;
+}
+
 void Disk::get_file_block(sfs_inode *inode, int block_num, char *block)
 {
     uint32_t ptrs[32] = {0};
@@ -214,6 +256,7 @@ void Disk::get_file_block(sfs_inode *inode, int block_num, char *block)
 
 void Disk::print_superblock()
 {
+    cout << left << setw(40) << setfill('=') << "========SUPERBLOCK=INFO" << endl;
     cout << "Filesystem Magic Number: " << super->fsmagic << endl;
     cout << "Filesystem Type String: " << super->fstypestr << endl;
     cout << "Block Size (bytes): " << super->block_size << endl;
@@ -231,6 +274,7 @@ void Disk::print_superblock()
     cout << "First Block of the Inode Table: " << super->inodes << endl;
     cout << "First Block of the Root Directory: " << super->rootdir << endl;
     cout << "Open Files Count: " << super->open_count << endl;
+    cout << left << setw(40) << setfill('=') << "" << endl;
 }
 
 void Disk::print_file_info()
@@ -334,7 +378,6 @@ string FileData::date_from_time(uint32_t time)
     // Convert uint32_t time to time_t
     time_t raw_time = time;
 
-    // Localize the time
     struct tm *timeinfo = gmtime(&raw_time);
 
     // Buffer to store the formatted date and time
@@ -345,4 +388,45 @@ string FileData::date_from_time(uint32_t time)
 
     // Return the formatted string
     return string(buffer);
+}
+
+int Disk::find_free_inode()
+{
+    bitmap_t *bitmaps = (bitmap_t *)malloc(block_size);
+    for (int i = 0; i < super->fi_bitmapblocks; i++)
+    {
+        driver_read(bitmaps, super->fi_bitmap + i);
+        for (int j = 0; j < 8; j++)
+        {
+            bitmap_t bitmap = bitmaps[j];
+            for (int k = 0; k < 32; k++)
+            {
+                uint8_t bit = get_bit(&bitmap, k);
+                if (bit == 0)
+                {
+                    return i * 1024 + j * 32 + k;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+vector<int> Disk::find_free_blocks(int num_blocks)
+{
+    vector<int> free_blocks;
+    bitmap_t *bitmap = (bitmap_t *)malloc(block_size);
+    for (int i = 0; i < super->fb_bitmapblocks; i++)
+    {
+        driver_read(bitmap, super->fb_bitmap + i);
+        for (int j = 0; j <= 1024; j++)
+        {
+            uint8_t bit = get_bit(bitmap, j);
+            if (bit == 0)
+            {
+                free_blocks.push_back(i * 1024 + j);
+            }
+        }
+    }
+    return free_blocks;
 }

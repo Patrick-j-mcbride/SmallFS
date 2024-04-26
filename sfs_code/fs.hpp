@@ -68,9 +68,12 @@ public:
     void print_filenames();
     bool file_exists(char *filename);
     void copy_file_out(char *filename);
+    void copy_file_in(char *filename);
     void get_file_block(sfs_inode *inode, int block_num, char *block);
     void print_superblock();
     void print_file_info();
+    int find_free_inode();
+    vector<int> find_free_blocks(int num_blocks);
 
     vector<FileData> filedata;
     char *image_file_name;
@@ -78,6 +81,7 @@ public:
     int block_size;
     char raw_superblock[128];
     sfs_superblock *super = (sfs_superblock *)raw_superblock;
+    int superblock_num;
 };
 
 #endif
