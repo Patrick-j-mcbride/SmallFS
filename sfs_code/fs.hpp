@@ -71,8 +71,10 @@ public:
     void copy_file_in(char *filename);
     void get_file_block(sfs_inode *inode, int block_num, char *block);
     void print_superblock();
+    void print_inode(sfs_inode *inode);
     void print_file_info();
     int find_free_inode();
+    void fix_disk();
     vector<int> find_free_blocks(int num_blocks);
 
     vector<FileData> filedata;

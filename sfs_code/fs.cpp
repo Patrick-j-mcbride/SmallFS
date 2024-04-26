@@ -256,25 +256,49 @@ void Disk::get_file_block(sfs_inode *inode, int block_num, char *block)
 
 void Disk::print_superblock()
 {
-    cout << left << setw(40) << setfill('=') << "========SUPERBLOCK=INFO" << endl;
-    cout << "Filesystem Magic Number: " << super->fsmagic << endl;
-    cout << "Filesystem Type String: " << super->fstypestr << endl;
-    cout << "Block Size (bytes): " << super->block_size << endl;
-    cout << "Sectors Per Block: " << super->sectorsperblock << endl;
-    cout << "Superblock Location: " << super->superblock << endl;
-    cout << "Total Number of Blocks: " << super->num_blocks << endl;
-    cout << "First Block of Free Block Bitmap: " << super->fb_bitmap << endl;
-    cout << "Number of Blocks in Free Block Bitmap: " << super->fb_bitmapblocks << endl;
-    cout << "Number of Unused Blocks: " << super->blocks_free << endl;
-    cout << "Total Number of Inodes: " << super->num_inodes << endl;
-    cout << "First Block of Free Inode Bitmap: " << super->fi_bitmap << endl;
-    cout << "Number of Blocks in Free Inode Bitmap: " << super->fi_bitmapblocks << endl;
-    cout << "Number of Unused Inodes: " << super->inodes_free << endl;
-    cout << "Number of Blocks in the Inode Table: " << super->num_inode_blocks << endl;
-    cout << "First Block of the Inode Table: " << super->inodes << endl;
-    cout << "First Block of the Root Directory: " << super->rootdir << endl;
-    cout << "Open Files Count: " << super->open_count << endl;
-    cout << left << setw(40) << setfill('=') << "" << endl;
+    cout << left << setw(80) << setfill('=') << "========SUPERBLOCK=INFO" << endl;
+    cout << "uint32_t fsmagic;          " << "Filesystem Magic Number:               " << super->fsmagic << endl;
+    cout << "char fstypestr[32];        " << "Filesystem Type String:                " << super->fstypestr << endl;
+    cout << "uint32_t block_size;       " << "Block Size (bytes):                    " << super->block_size << endl;
+    cout << "uint32_t sectorsperblock;  " << "Sectors Per Block:                     " << super->sectorsperblock << endl;
+    cout << "uint32_t superblock;       " << "Superblock Location:                   " << super->superblock << endl;
+    cout << "uint32_t num_blocks;       " << "Total Number of Blocks:                " << super->num_blocks << endl;
+    cout << "uint32_t fb_bitmap;        " << "First Block of Free Block Bitmap:      " << super->fb_bitmap << endl;
+    cout << "uint32_t fb_bitmapblocks;  " << "Number of Blocks in Free Block Bitmap: " << super->fb_bitmapblocks << endl;
+    cout << "uint32_t blocks_free;      " << "Number of Unused Blocks:               " << super->blocks_free << endl;
+    cout << "uint32_t num_inodes;       " << "Total Number of Inodes:                " << super->num_inodes << endl;
+    cout << "uint32_t fi_bitmap;        " << "First Block of Free Inode Bitmap:      " << super->fi_bitmap << endl;
+    cout << "uint32_t fi_bitmapblocks;  " << "Number of Blocks in Free Inode Bitmap: " << super->fi_bitmapblocks << endl;
+    cout << "uint32_t inodes_free;      " << "Number of Unused Inodes:               " << super->inodes_free << endl;
+    cout << "uint32_t num_inode_blocks; " << "Number of Blocks in the Inode Table:   " << super->num_inode_blocks << endl;
+    cout << "uint32_t inodes;           " << "First Block of the Inode Table:        " << super->inodes << endl;
+    cout << "uint32_t rootdir;          " << "First Block of the Root Directory:     " << super->rootdir << endl;
+    cout << "uint32_t open_count;       " << "Open Files Count:                      " << super->open_count << endl;
+    cout << left << setw(80) << setfill('=') << "" << endl;
+}
+
+void Disk::print_inode(sfs_inode *inode)
+{
+    cout << left << setw(80) << setfill('=') << "========INODE=INFO" << endl;
+    cout << "uint32_t owner;            " << "Owner:                                " << inode->owner << endl;
+    cout << "uint32_t group;            " << "Group:                                " << inode->group << endl;
+    cout << "uint32_t ctime;            " << "Creation Time:                        " << inode->ctime << endl;
+    cout << "uint32_t mtime;            " << "Modification Time:                    " << inode->mtime << endl;
+    cout << "uint32_t atime;            " << "Access Time:                          " << inode->atime << endl;
+    cout << "uint16_t perm;             " << "Permissions:                          " << inode->perm << endl;
+    cout << "uint8_t type;              " << "Type:                                 " << (int)inode->type << endl;
+    cout << "uint8_t refcount;          " << "Reference Count:                      " << (int)inode->refcount << endl;
+    cout << "uint64_t size;             " << "Size:                                 " << inode->size << endl;
+    cout << "uint32_t direct[5];        " << "Direct Block Pointers:                ";
+    for (int i = 0; i < NUM_DIRECT; i++)
+    {
+        cout << inode->direct[i] << " ";
+    }
+    cout << endl;
+    cout << "uint32_t indirect;         " << "Indirect Block Pointer:               " << inode->indirect << endl;
+    cout << "uint32_t dindirect;        " << "Double Indirect Block Pointer:        " << inode->dindirect << endl;
+    cout << "uint32_t tindirect;        " << "Triple Indirect Block Pointer:        " << inode->tindirect << endl;
+    cout << left << setw(80) << setfill('=') << "" << endl;
 }
 
 void Disk::print_file_info()
@@ -433,4 +457,25 @@ vector<int> Disk::find_free_blocks(int num_blocks)
         }
     }
     return free_blocks;
+}
+
+void Disk::fix_disk()
+{
+    print_superblock();
+    print_inode(rootnode);
+    exit(0);
+    bitmap_t *bitmap = (bitmap_t *)malloc(block_size);
+    for (int i = 0; i < super->fb_bitmapblocks; i++)
+    {
+        driver_read(bitmap, super->fb_bitmap + i);
+        for (int j = 0; j <= 1024; j++)
+        {
+            uint8_t bit = get_bit(bitmap, j);
+            if (bit == 0)
+            {
+                set_bit(bitmap, j);
+            }
+        }
+        driver_write(bitmap, super->fb_bitmap + i);
+    }
 }
