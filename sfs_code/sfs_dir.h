@@ -6,13 +6,12 @@
    followed by an inode number.
 */
 
-#define SFS_NAME_MAX (32-sizeof(uint32_t))
+#define SFS_NAME_MAX (32 - sizeof(uint32_t))
 
-typedef struct {
+typedef struct
+{
   char name[SFS_NAME_MAX];
   uint32_t inode;
-}sfs_dirent;
-
-
+} sfs_dirent;
 
 #endif

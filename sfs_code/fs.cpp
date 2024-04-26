@@ -303,7 +303,11 @@ void Disk::print_file_info()
         filedata[i].type = inode->type;
         filedata[i].refcount = inode->refcount;
         filedata[i].size = inode->size;
-        filedata[i].direct[NUM_DIRECT] = inode->direct[NUM_DIRECT];
+        filedata[i].direct[0] = inode->direct[0];
+        filedata[i].direct[1] = inode->direct[1];
+        filedata[i].direct[2] = inode->direct[2];
+        filedata[i].direct[3] = inode->direct[3];
+        filedata[i].direct[4] = inode->direct[4];
         filedata[i].indirect = inode->indirect;
         filedata[i].dindirect = inode->dindirect;
         filedata[i].tindirect = inode->tindirect;

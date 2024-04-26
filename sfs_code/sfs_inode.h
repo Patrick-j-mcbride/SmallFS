@@ -20,8 +20,8 @@
 
 #define NUM_DIRECT 5
 
-/* 
-  For a filesystem with 128 byte blocks: 
+/*
+  For a filesystem with 128 byte blocks:
    - Five direct blocks will handle files up to 128*5 = 640 bytes.
    - Five direct and one indirect block will handle files up to 128*5
      + 128*128/4 = 4736 bytes.
@@ -42,7 +42,7 @@
      256*256/4*256/4 + 256*256/4*256/4*256/4 = 68,175,084 bytes.
 
    A filesystem with a 4K block size can have files up to 4096*5 +
-   4096*4096/4 + 4096*4096/4*4096/4 + 4096*4096/4*4096/4*4096/4 = 
+   4096*4096/4 + 4096*4096/4*4096/4 + 4096*4096/4*4096/4*4096/4 =
    4,402,345,693,184 bytes in length.  That should be enough for
    any sane person.
 */
@@ -57,23 +57,24 @@
 #define FT_SYMLINK 6
 
 /* this is the structure of an inode */
-typedef struct sfs_inode{
-  uint32_t owner;    /* UID of owner */
-  uint32_t group;    /* GID of group */
-  uint32_t ctime;    /* time that the file was created */
-  uint32_t mtime;    /* time that the file was last modified */
-  uint32_t atime;    /* time that the file was last accessed */
-  uint16_t perm;     /* file permissions */
-  uint8_t  type;     /* one of the FT_ values defined above for
-			different types of files.  If type is
-			FT_CHAR_SPEC or FT_BLOCK_SPEC, then the major
-			driver number is stored in direct[0] and the
-			minor driver number is stored in direct[1] */
-  uint8_t refcount;  /* number of hard links to this file, limit is 255 */
-  uint64_t size;     /* since size is an unsigned 64-bit int, it
-		        limits us to enormous files (2^64 bytes). The
-		        block size is also a limiting factor, as
-		        discussed above. */
+typedef struct sfs_inode
+{
+  uint32_t owner;   /* UID of owner */
+  uint32_t group;   /* GID of group */
+  uint32_t ctime;   /* time that the file was created */
+  uint32_t mtime;   /* time that the file was last modified */
+  uint32_t atime;   /* time that the file was last accessed */
+  uint16_t perm;    /* file permissions */
+  uint8_t type;     /* one of the FT_ values defined above for
+     different types of files.  If type is
+     FT_CHAR_SPEC or FT_BLOCK_SPEC, then the major
+     driver number is stored in direct[0] and the
+     minor driver number is stored in direct[1] */
+  uint8_t refcount; /* number of hard links to this file, limit is 255 */
+  uint64_t size;    /* since size is an unsigned 64-bit int, it
+           limits us to enormous files (2^64 bytes). The
+           block size is also a limiting factor, as
+           discussed above. */
   /* block numbers for direct blocks */
   uint32_t direct[NUM_DIRECT]; /* with 5 direct, an inode is 64 bytes */
   /* block number for indirect block */
@@ -82,8 +83,7 @@ typedef struct sfs_inode{
   uint32_t dindirect;
   /* block number for triple indirect block */
   uint32_t tindirect;
-}sfs_inode_t;
-
+} sfs_inode_t;
 
 /* Max file sizes
 
@@ -94,6 +94,6 @@ block size  |  triple   double  single direct
 4K          |  4T +     4G +    4M +    20K
 8K          |  64T +    32G +   16M +   40K
 16K         |  256T +   256G +  64M +   80K
-*/ 
+*/
 
 #endif
