@@ -82,9 +82,9 @@ void Disk::get_super()
 
 void Disk::get_root()
 {
-    sfs_inode *root_inodes = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
-    driver_read(root_inodes, super->inodes);
-    this->rootnode = &root_inodes[0];
+    root_store = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
+    driver_read(root_store, super->inodes);
+    this->rootnode = &root_store[0];
 }
 
 void Disk::get_files_in_root()
@@ -109,12 +109,18 @@ void Disk::get_files_in_root()
             ct++;
             if (ct == files_in_root)
             {
-                free(dirents);
+                if (dirents != NULL)
+                {
+                    free(dirents);
+                }
                 return;
             }
         }
     }
-    free(dirents);
+    if (dirents != NULL)
+    {
+        free(dirents);
+    }
 }
 
 void Disk::put_file_in_root(char *filename, uint32_t inode_num)
@@ -138,21 +144,27 @@ void Disk::put_file_in_root(char *filename, uint32_t inode_num)
                 dirent->inode = inode_num;
                 strcpy(dirent->name, filename);
                 driver_write(dirents, (uint32_t)loc);
-                free(dirents);
                 // get a fresh copy of rootnode
-                sfs_inode *root_inodes = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
-                driver_read(root_inodes, super->inodes);
-                this->rootnode = &root_inodes[0];
+                root_store = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
+                driver_read(root_store, super->inodes);
+                this->rootnode = &root_store[0];
                 // set the new size of the root node
                 rootnode->size += sizeof(sfs_dirent);
                 // write the new root node to the disk
-                driver_write(root_inodes, super->inodes);
+                driver_write(root_store, super->inodes);
+                if (dirents != NULL)
+                {
+                    free(dirents);
+                }
                 return;
             }
         }
         block_idx++;
     }
-    free(dirents);
+    if (dirents != NULL)
+    {
+        free(dirents);
+    }
 }
 
 void Disk::print_filenames()
@@ -197,25 +209,37 @@ void Disk::copy_file_out(char *filename)
             int blocks = inode->size / block_size;
             char *data = (char *)malloc(inode->size);
             char *block = (char *)malloc(block_size);
-            for (int j = 0; j < blocks; j++)
+            if (blocks == 0)
             {
-                get_file_block(inode, j, block);
-                if (j == blocks - 1 && (inode->size % block_size) != 0)
+                get_file_block(inode, 0, block);
+                memcpy(data, block, inode->size);
+            }
+            else
+            {
+                for (int j = 0; j < blocks; j++)
                 {
-                    memcpy(data + j * block_size, block, block_size); // Copy the last full block
-                    // Only copy the relevant portion of the last block
-                    j++;
                     get_file_block(inode, j, block);
-                    memcpy(data + j * block_size, block, inode->size % block_size);
-                }
-                else
-                {
-                    memcpy(data + j * block_size, block, block_size);
+                    if (j == blocks - 1 && (inode->size % block_size) != 0)
+                    {
+                        memcpy(data + j * block_size, block, block_size); // Copy the last full block
+                        // Only copy the relevant portion of the last block
+                        j++;
+                        get_file_block(inode, j, block);
+                        memcpy(data + j * block_size, block, inode->size % block_size);
+                    }
+                    else
+                    {
+                        memcpy(data + j * block_size, block, block_size);
+                    }
                 }
             }
             FILE *file = fopen(filename, "w");
             fwrite(data, inode->size, 1, file);
             fclose(file);
+            if (inodes != NULL)
+            {
+                free(inodes);
+            }
             return;
         }
     }
@@ -297,6 +321,14 @@ void Disk::copy_file_in(char *filename)
     put_file_in_root(filename, inode_num);
     driver_write(inodes, bloknm);
     fix_disk(false);
+    if (inodes != NULL)
+    {
+        free(inodes);
+    }
+    if (data != NULL)
+    {
+        free(data);
+    }
 }
 
 void Disk::add_file_data(sfs_inode *inode, vector<int> free_blocks, char *data, int blocks)
@@ -511,10 +543,10 @@ void Disk::print_inode(sfs_inode *inode)
 
 void Disk::print_file_info()
 {
+    sfs_inode *inodes = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
     for (int i = 0; i < (int)filedata.size(); i++)
     {
         int idx = 0;
-        sfs_inode *inodes = (sfs_inode *)malloc(2 * sizeof(sfs_inode));
 
         if (filedata[i].inode % 2 != 0)
         {
@@ -544,6 +576,10 @@ void Disk::print_file_info()
         filedata[i].dindirect = inode->dindirect;
         filedata[i].tindirect = inode->tindirect;
         filedata[i].print_ls_al_info();
+    }
+    if (inodes != NULL)
+    {
+        free(inodes);
     }
 }
 
@@ -659,10 +695,18 @@ int Disk::get_free_inode()
                 {
                     set_bit(&bitmaps[j], (uint32_t)k);
                     driver_write(bitmaps, super->fi_bitmap + i);
+                    if (bitmaps != NULL)
+                    {
+                        free(bitmaps);
+                    }
                     return i * 1024 + j * 32 + k;
                 }
             }
         }
+    }
+    if (bitmaps != NULL)
+    {
+        free(bitmaps);
     }
     return -1;
 }
@@ -680,6 +724,10 @@ void Disk::update_free_blocks_list(vector<int> used_blocks)
             {
                 if (block_idx == (int)used_blocks.size())
                 {
+                    if (bitmap != NULL)
+                    {
+                        free(bitmap);
+                    }
                     return; // All used blocks have been updated
                 }
                 else if (used_blocks[block_idx] == i * 1024 + j * 32 + k)
@@ -690,6 +738,11 @@ void Disk::update_free_blocks_list(vector<int> used_blocks)
                 }
             }
         }
+    }
+
+    if (bitmap != NULL)
+    {
+        free(bitmap);
     }
 }
 
@@ -713,6 +766,10 @@ vector<int> Disk::get_free_blocks_list()
         }
     }
     free_blocks.pop_back();
+    if (bitmap != NULL)
+    {
+        free(bitmap);
+    }
     return free_blocks;
 }
 
@@ -791,6 +848,10 @@ void Disk::print_inode_bitmap()
         cout << left << setw(32) << setfill('=') << "" << endl;
     }
     cout << left << setw(40) << setfill('=') << "" << endl;
+    if (bitmaps != NULL)
+    {
+        free(bitmaps);
+    }
 }
 
 void Disk::print_block_bitmap()
@@ -814,6 +875,10 @@ void Disk::print_block_bitmap()
         cout << left << setw(32) << setfill('=') << "" << endl;
     }
     cout << left << setw(40) << setfill('=') << "" << endl;
+    if (bitmaps != NULL)
+    {
+        free(bitmaps);
+    }
 }
 
 uint32_t Disk::get_num_free_blocks()
@@ -838,6 +903,10 @@ uint32_t Disk::get_num_free_blocks()
     if (num_free_blocks > 0) // Decrement the number of free blocks by 1 to account the extra bit
     {
         num_free_blocks--;
+    }
+    if (bitmap != NULL)
+    {
+        free(bitmap);
     }
     return num_free_blocks;
 }
@@ -865,6 +934,10 @@ uint32_t Disk::get_num_free_inodes()
     if (num_free_inodes > 0) // Decrement the number of free inodes by 1 to account the extra bit
     {
         num_free_inodes--;
+    }
+    if (bitmaps != NULL)
+    {
+        free(bitmaps);
     }
     return num_free_inodes;
 }

@@ -93,6 +93,7 @@ public:
     char raw_superblock[128];
     sfs_superblock *super = (sfs_superblock *)raw_superblock;
     int superblock_num;
+    sfs_inode *root_store;
 };
 
 #endif
