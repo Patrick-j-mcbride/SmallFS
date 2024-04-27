@@ -585,8 +585,6 @@ void Disk::print_file_info()
 
 void FileData::print_ls_al_info()
 {
-    string output_str = "";
-    // Create the permissions string
     string perm_str = "";
 
     switch (type)
@@ -627,18 +625,15 @@ void FileData::print_ls_al_info()
     perm_str += (perm & 0x2) ? "w" : "-";
     perm_str += (perm & 0x1) ? "x" : "-";
 
-    // add a space after the permissions string
-    perm_str += " ";
-    output_str += perm_str;
     cout << perm_str;
 
-    cout << right << setw(3) << to_string(refcount) << " ";
+    cout << right << setw(2) << to_string(refcount) << " ";
 
-    cout << right << setw(4) << to_string(owner) << " ";
+    cout << right << setw(6) << to_string(owner) << " ";
 
-    cout << right << setw(4) << to_string(group) << " ";
+    cout << right << setw(6) << to_string(group) << " ";
 
-    cout << right << setw(8) << to_string(size) << " ";
+    cout << right << setw(7) << to_string(size) << " ";
 
     cout << date_from_time(ctime) << " ";
 
@@ -666,14 +661,17 @@ string FileData::date_from_time(uint32_t time)
 {
     // Convert uint32_t time to time_t
     time_t raw_time = time;
+    // use localtime
+    struct tm *timeinfo = localtime(&raw_time);
 
-    struct tm *timeinfo = gmtime(&raw_time);
+    // Uncomment for UTC
+    // struct tm *timeinfo = gmtime(&raw_time);
 
     // Buffer to store the formatted date and time
     char buffer[80];
 
     // Format the date and time: "Mon 2 Jan 2006 15:04"
-    strftime(buffer, sizeof(buffer), "%b %d %Y %H:%M", timeinfo);
+    strftime(buffer, sizeof(buffer), "%b %d %H:%M %Y", timeinfo);
 
     // Return the formatted string
     return string(buffer);
