@@ -25,7 +25,7 @@ using namespace std;
 void fix(char *diskname)
 {
     Disk disk = Disk(diskname, 128);
-    disk.fix_disk();
+    disk.fix_disk(true);
 }
 
 int main(int argc, char **argv)

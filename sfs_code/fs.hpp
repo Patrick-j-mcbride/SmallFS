@@ -69,13 +69,22 @@ public:
     bool file_exists(char *filename);
     void copy_file_out(char *filename);
     void copy_file_in(char *filename);
-    void get_file_block(sfs_inode *inode, int block_num, char *block);
+    int get_file_block(sfs_inode *inode, int block_num, char *block);
     void print_superblock();
     void print_inode(sfs_inode *inode);
     void print_file_info();
-    int find_free_inode();
-    void fix_disk();
-    vector<int> find_free_blocks(int num_blocks);
+    void print_inode_bitmap();
+    void print_block_bitmap();
+    void put_file_in_root(char *filename, uint32_t inode_num);
+    int get_free_inode();
+    void fix_disk(bool verbose);
+    vector<int> get_free_blocks_list();
+    uint32_t get_num_free_blocks();
+    uint32_t get_num_free_inodes();
+    void print_disk_info();
+    uint16_t formatPermissions(mode_t mode);
+    void add_file_data(sfs_inode *inode, vector<int> free_blocks, char *data, int blocks);
+    void update_free_blocks_list(vector<int> used_blocks);
 
     vector<FileData> filedata;
     char *image_file_name;

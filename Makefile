@@ -1,6 +1,6 @@
 CXX=g++
 CC=gcc
-CXXFLAGS=-std=c++14 -I./sfs_code 
+CXXFLAGS= -Wall -std=c++14 -I./sfs_code 
 CFLAGS=-I./sfs_code  
 LDFLAGS=
 SOURCES_C=$(wildcard sfs_code/*.c)

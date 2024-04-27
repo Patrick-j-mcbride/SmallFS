@@ -52,7 +52,14 @@ int main(int argc, char **argv)
     else if (argc == 3)
     { // -l
         char *diskname = argv[1];
-        if (strcmp(argv[2], "-l") != 0)
+
+        if (strcmp(argv[2], "-ds") == 0)
+        {
+            Disk disk = Disk(diskname, 128);
+            disk.print_disk_info();
+            return 0;
+        }
+        else if (strcmp(argv[2], "-l") != 0)
         {
             cout << "Usage: <diskname> <-l>(optional)" << endl;
             return 1;

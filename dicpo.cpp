@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     if (argc < 3)
     { // No arguments
         cout << "Usage: <diskname> <filename>" << endl;
-        return 1;
+        exit(1);
     }
     else if (argc == 3)
     {
@@ -54,6 +54,6 @@ int main(int argc, char **argv)
     else
     {
         cout << "Usage: <diskname> <filename>" << endl;
-        return 1;
+        exit(1);
     }
 }
