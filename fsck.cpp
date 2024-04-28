@@ -1,24 +1,5 @@
-#include <stdio.h>
-#include <string>
-#include <unistd.h>
 #include <iostream>
-#include <vector>
-#include <cstring>
 #include <fs.hpp>
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-#include <driver.h>
-#include <sfs_superblock.h>
-#include <sfs_inode.h>
-#include <sfs_dir.h>
-
-#ifdef __cplusplus
-}
-#endif
 
 using namespace std;
 
