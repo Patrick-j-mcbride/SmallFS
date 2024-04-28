@@ -24,6 +24,10 @@ using namespace std;
 
 void copy_file_in(char *diskname, char *filename)
 {
+    Disk disk0 = Disk(diskname, 128);
+    disk0.fix_disk(false);
+    // call the destructor
+    disk0.~Disk();
     Disk disk = Disk(diskname, 128);
     disk.copy_file_in(filename);
 }
